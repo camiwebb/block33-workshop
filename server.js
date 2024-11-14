@@ -19,10 +19,10 @@ app.get('/api/departments', async (req, res, next) => {
     }
 });
 
-// READ employee
-app.get('/api/employee', async (req, res, next) => {
+// READ employees
+app.get('/api/employees', async (req, res, next) => {
     try {
-        const SQL = `SELECT * FROM employee`;
+        const SQL = `SELECT * FROM employees`;
         const response = await client.query(SQL);
         res.send(response.rows);
     } catch (error) {
@@ -30,10 +30,10 @@ app.get('/api/employee', async (req, res, next) => {
     }
 });
 
-// CREATE employee with foreign key
-app.post('/api/employee', async (req, res, next) => {
+// CREATE employees with foreign key
+app.post('/api/employees', async (req, res, next) => {
     try {
-        const SQL = `INSERT INTO employee(name, department_id) VALUES ($1, $2) RETURNING *`;
+        const SQL = `INSERT INTO employees(name, department_id) VALUES ($1, $2) RETURNING *`;
         const response = await client.query(SQL, [req.body.name, req.body.department_id]);
         res.status(201).send(response.rows[0]);
     } catch (error) {
@@ -41,11 +41,11 @@ app.post('/api/employee', async (req, res, next) => {
     }
 });
 
-// UPDATE employee with foreign key
-app.put('/api/employee/:id', async (req, res, next) => {
+// UPDATE employees with foreign key
+app.put('/api/employees/:id', async (req, res, next) => {
     try {
         const SQL = /* sql */ `
-            UPDATE employee
+            UPDATE employees
             SET name=$1, department_id=$2, updated_at=now()
             WHERE id=$3
             RETURNING *
@@ -57,10 +57,10 @@ app.put('/api/employee/:id', async (req, res, next) => {
     }
 });
 
-// DELETE employee
-app.delete('/api/employee/:id', async (req, res, next) => {
+// DELETE employees
+app.delete('/api/employees/:id', async (req, res, next) => {
     try {
-        const SQL = `DELETE FROM employee WHERE id=$1`;
+        const SQL = `DELETE FROM employees WHERE id=$1`;
         await client.query(SQL, [req.params.id]);
         res.sendStatus(204);
     } catch (error) {
@@ -70,15 +70,15 @@ app.delete('/api/employee/:id', async (req, res, next) => {
 
 // handle errors
 app.use((error, req, res, next) => {
-    res.status(res.status || 500).send({
-        error: error
+    res.status(error.status || 500).send({
+        error: error.message
     });
 });
 
 const init = async () => {
     await client.connect();
     let SQL = /* sql */ `
-        DROP TABLE IF EXISTS employee;
+        DROP TABLE IF EXISTS employees;
         DROP TABLE IF EXISTS departments;
 
         CREATE TABLE departments(
@@ -86,7 +86,7 @@ const init = async () => {
             name VARCHAR(100) NOT NULL UNIQUE
         );
 
-        CREATE TABLE employee(
+        CREATE TABLE employees(
             id SERIAL PRIMARY KEY,
             name VARCHAR(150) NOT NULL,
             created_at TIMESTAMP DEFAULT now(),
@@ -103,10 +103,10 @@ const init = async () => {
         INSERT INTO departments(name) VALUES ('Sales');
         INSERT INTO departments(name) VALUES ('Marketing');
 
-        INSERT INTO employee(name, department_id) VALUES ('Bob Smith', (SELECT id FROM departments WHERE name='Marketing'));
-        INSERT INTO employee(name, department_id) VALUES ('Joe Evans', (SELECT id FROM departments WHERE name='Human Resources'));
-        INSERT INTO employee(name, department_id) VALUES ('Mary Newton', (SELECT id FROM departments WHERE name='Human Resources'));
-        INSERT INTO employee(name, department_id) VALUES ('Susan Jones', (SELECT id FROM departments WHERE name='Sales'));
+        INSERT INTO employees(name, department_id) VALUES ('Bob Smith', (SELECT id FROM departments WHERE name='Marketing'));
+        INSERT INTO employees(name, department_id) VALUES ('Joe Evans', (SELECT id FROM departments WHERE name='Human Resources'));
+        INSERT INTO employees(name, department_id) VALUES ('Mary Newton', (SELECT id FROM departments WHERE name='Human Resources'));
+        INSERT INTO employees(name, department_id) VALUES ('Susan Jones', (SELECT id FROM departments WHERE name='Sales'));
     `;
 
     await client.query(SQL);
